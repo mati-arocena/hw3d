@@ -2,6 +2,8 @@
 
 #pragma comment(lib, "d3d11.lib")
 
+namespace wrl = Microsoft::WRL;
+
 Graphics::Graphics(HWND hWnd)
 {
 	DXGI_SWAP_CHAIN_DESC sd = {};
@@ -36,39 +38,16 @@ Graphics::Graphics(HWND hWnd)
 		&pContext
 	);
 
-	ID3D11Resource* pBackBuffer = nullptr;
+	wrl::ComPtr<ID3D11Resource> pBackBuffer;
 	const UINT BackBufferIndex = 0;
-	pSwap->GetBuffer(BackBufferIndex, __uuidof(ID3D11Resource), reinterpret_cast<void**>(&pBackBuffer));
+	pSwap->GetBuffer(BackBufferIndex, __uuidof(ID3D11Resource), &pBackBuffer);
 	pDevice->CreateRenderTargetView(
-		pBackBuffer,
+		pBackBuffer.Get(),
 		nullptr,
 		&pTarget
 	);
-	pBackBuffer->Release();
 }
 
-Graphics::~Graphics()
-{
-	if (pTarget != nullptr)
-	{
-		pTarget->Release();
-	}
-
-	if (pContext != nullptr)
-	{
-		pContext->Release();
-	}
-
-	if (pSwap != nullptr)
-	{
-		pSwap->Release();
-	}
-
-	if (pDevice != nullptr)
-	{
-		pDevice->Release();
-	}
-}
 
 void Graphics::EndFrame()
 {
@@ -78,5 +57,5 @@ void Graphics::EndFrame()
 void Graphics::ClearBuffer(float red, float green, float blue) noexcept
 {
 	const float color[] = { red, green, blue, 1.0f };
-	pContext->ClearRenderTargetView(pTarget, color);
+	pContext->ClearRenderTargetView(pTarget.Get(), color);
 }
